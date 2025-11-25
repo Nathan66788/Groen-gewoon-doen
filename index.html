@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>De Groene Tuinman</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav>
+        <div class="logo">🌿 De Groene Tuinman</div>
+        <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#pakketten">Pakketten</a></li>
+            <li><a href="#offerte">Offerte op Maat</a></li>
+            <li><a href="admin.html" style="color: orange;">(Admin Login)</a></li>
+        </ul>
+        <button onclick="scrollToSection('offerte')" class="cta-btn">Afspraak Maken</button>
+    </nav>
+
+    <header id="home">
+        <div class="hero-content">
+            <h1>Uw tuin, onze zorg</h1>
+            <p>Van voorjaarsbeurt tot wekelijks onderhoud.</p>
+            <button onclick="scrollToSection('pakketten')" class="btn-primary">Bekijk Pakketten</button>
+        </div>
+    </header>
+
+    <section id="pakketten">
+        <h2>Onze Standaard Pakketten</h2>
+        <div class="pakket-grid" id="pakket-container">
+            </div>
+    </section>
+
+    <section id="offerte">
+        <h2>Afspraak Maken / Offerte</h2>
+        <p>Heeft u een specifieke wens of wilt u een standaard pakket boeken?</p>
+        
+        <form id="klantFormulier">
+            <label>Naam:</label>
+            <input type="text" id="klantNaam" required placeholder="Uw naam">
+            
+            <label>Datum voorkeur:</label>
+            <input type="date" id="klantDatum" required>
+
+            <label>Type klus:</label>
+            <select id="klantType">
+                <option value="Offerte op maat">Speciale aanvraag (Offerte)</option>
+                <option value="Onderhoud">Tuinonderhoud</option>
+                <option value="Voorjaarsbeurt">Voorjaarsbeurt</option>
+            </select>
+
+            <label>Bericht / Details:</label>
+            <textarea id="klantBericht" rows="4" placeholder="Beschrijf uw wensen..."></textarea>
+
+            <button type="submit" class="btn-primary">Verstuur Aanvraag</button>
+        </form>
+    </section>
+
+    <footer>
+        <p>&copy; 2024 De Groene Tuinman</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

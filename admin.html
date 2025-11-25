@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - Tuinman</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { background-color: #f4f4f4; color: #333; }
+        .admin-container { max-width: 1000px; margin: 2rem auto; padding: 1rem; }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background-color: #2d6a4f; color: white; }
+    </style>
+</head>
+<body>
+
+    <nav style="background: #1b4332;">
+        <div class="logo">🛠️ Admin Dashboard</div>
+        <ul>
+            <li><a href="index.html">Terug naar Website</a></li>
+        </ul>
+    </nav>
+
+    <div class="admin-container">
+        <h1>Beheer & Planning</h1>
+
+        <div class="dashboard-grid">
+            
+            <div class="card" style="grid-column: span 2;">
+                <h3>📅 Planning & Orders</h3>
+                <p>Overzicht van aanvragen en ingeplande klussen.</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th>Klant</th>
+                            <th>Type</th>
+                            <th>Details</th>
+                            <th>Actie</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderTabel">
+                        </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>➕ Nieuw Pakket Toevoegen</h3>
+                <form id="adminPakketForm">
+                    <input type="text" id="pakketTitel" placeholder="Naam pakket (bv. Winterklaar)" required>
+                    <input type="text" id="pakketPrijs" placeholder="Prijs (bv. €50/uur)" required>
+                    <textarea id="pakketBeschrijving" placeholder="Wat zit erin?" required></textarea>
+                    <button type="submit" class="btn-primary">Pakket Opslaan</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>📊 Status</h3>
+                <p>Aantal openstaande orders: <strong id="orderCount">0</strong></p>
+                <p>Systeem status: <strong>Online</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Specifieke init voor admin pagina
+        document.addEventListener('DOMContentLoaded', () => {
+            laadOrdersInAdmin();
+        });
+    </script>
+</body>
+</html>
