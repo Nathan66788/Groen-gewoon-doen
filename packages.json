@@ -1,0 +1,26 @@
+[
+    {
+        "id": "PKT001",
+        "naam": "Voorjaarsbeurt Compleet",
+        "beschrijving": "Snoeien, bemesten, onkruid verwijderen en gazonbeluchting.",
+        "prijs": "€350,00 (Vaste Prijs)"
+    },
+    {
+        "id": "PKT002",
+        "naam": "Wekelijks Onderhoud",
+        "beschrijving": "Gras maaien, kanten knippen, hagen bijhouden.",
+        "prijs": "€45,00 per uur"
+    },
+    {
+        "id": "PKT003",
+        "naam": "Winterklaar Maken",
+        "beschrijving": "Bladruimen, planten inpakken, en inspectie van bomen en struiken.",
+        "prijs": "€200,00 (Vaste Prijs)"
+    },
+    {
+        "id": "PKT004",
+        "naam": "Custom Offerte op Maat",
+        "beschrijving": "Voor alle specifieke projecten en wensen.",
+        "prijs": "Prijs op aanvraag"
+    }
+]
