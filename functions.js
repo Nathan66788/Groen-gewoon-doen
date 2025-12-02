@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Laad pakketten in zowel de dropdown als de grid
     loadPackages();
 
-    // Event listener voor het bestelformulier
+    // Event listener voor het bestelformulier op index.html
     const form = document.getElementById('klantFormulier');
     if (form) {
         form.addEventListener('submit', (e) => {
@@ -12,6 +12,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    // Event listener voor het custom formulier op custom_offerte.html
+    const customForm = document.getElementById('customKlantFormulier');
+    if (customForm) {
+        customForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            verwerkCustomBestelling();
+        });
+    }
+
     // Admin Pagina Functies
     if (document.getElementById('adminPakketForm')) {
         // Laad orders in de tabel
@@ -28,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toonPakkettenInAdmin();
     }
 });
+
 
 // --- FUNCTIES VOOR KLANTEN PAGINA (index.html) ---
 
@@ -85,7 +95,6 @@ async function loadPackages() {
     }
 }
 
-// [De functies verwerkBestelling en createOrder blijven hetzelfde]
 function verwerkBestelling() {
     // Haal de geselecteerde optie op voor de naam
     const selectedPackageElement = document.getElementById('klantPakket');
@@ -100,13 +109,55 @@ function verwerkBestelling() {
         tijd: document.getElementById('klantTijd').value,
         pakketId: selectedPackageElement.value,
         pakketNaam: selectedPackageText,
-        status: 'Nieuwe Aanvraag'
+        status: 'Nieuwe Aanvraag (Standaard)'
     };
 
     createOrder(orderData);
 }
 
-function createOrder(orderData) {
+
+// --- NIEUWE FUNCTIE VOOR CUSTOM OFFERTE PAGINA (custom_offerte.html) ---
+
+/**
+ * Verzamelt formulierdata van het custom formulier en roept createOrder aan.
+ */
+function verwerkCustomBestelling() {
+    // Verzamel geselecteerde checkboxen
+    const checkboxes = document.querySelectorAll('#customKlantFormulier input[name="klus"]:checked');
+    const geselecteerdeKlussen = Array.from(checkboxes).map(cb => cb.value);
+
+    // Bepaal de lengte en breedte
+    const lengte = document.getElementById('tuinLengte').value;
+    const breedte = document.getElementById('tuinBreedte').value;
+    const oppervlakte = parseFloat(lengte) * parseFloat(breedte);
+
+    const orderData = {
+        id: Date.now(), 
+        naam: document.getElementById('klantNaam').value,
+        adres: document.getElementById('klantAdres').value,
+        postcodePlaats: document.getElementById('klantPostcodePlaats').value,
+        datum: document.getElementById('klantDatum').value,
+        tijd: document.getElementById('klantTijd').value,
+        
+        // Specifieke custom data
+        pakketNaam: 'CUSTOM OFFERTE VRAAG',
+        werkzaamheden: geselecteerdeKlussen.join(', ') || 'Geen specifieke klussen geselecteerd',
+        afmetingen: `Lengte: ${lengte}m, Breedte: ${breedte}m, Totale Oppervlakte: ${oppervlakte.toFixed(2)} m²`,
+        status: 'Nieuwe Offerte Aanvraag'
+    };
+
+    createOrder(orderData, true); // Stuur 'true' mee om de output van het custom formulier te tonen
+}
+
+
+// --- GEMEENSCHAPPELIJKE FUNCTIES ---
+
+/**
+ * Verwerkt de orderdata: Logt, bewaart in Local Storage en geeft feedback.
+ * @param {object} orderData - Het order object.
+ * @param {boolean} isCustom - Geeft aan of de aanvraag van het custom formulier komt.
+ */
+function createOrder(orderData, isCustom = false) {
     console.log("--- Nieuwe Bestelling Ontvangen ---");
     console.log(orderData);
     
@@ -117,11 +168,25 @@ function createOrder(orderData) {
     const outputDiv = document.getElementById('orderOutput');
     const displayPre = document.getElementById('orderDataDisplay');
 
-    displayPre.textContent = JSON.stringify(orderData, null, 2);
-    outputDiv.style.display = 'block';
-    
+    if (outputDiv && displayPre) {
+        // Toon de output op de index.html of custom_offerte.html
+        displayPre.textContent = JSON.stringify(orderData, null, 2);
+        outputDiv.style.display = 'block';
+    }
+
     alert(`Bestelling geplaatst! We komen op ${orderData.datum} om ${orderData.tijd} voor: ${orderData.pakketNaam}`);
-    document.getElementById('klantFormulier').reset();
+    
+    // Reset alleen als de formulier-ID bestaat op de huidige pagina
+    if (!isCustom && document.getElementById('klantFormulier')) {
+         document.getElementById('klantFormulier').reset();
+    } else if (isCustom && document.getElementById('customKlantFormulier')) {
+         document.getElementById('customKlantFormulier').reset();
+    }
+
+    // Herlaad de admin weergave als we op de admin pagina zijn
+    if (document.getElementById('orderTabel')) {
+        laadOrdersInAdmin();
+    }
 }
 
 
@@ -159,7 +224,7 @@ function voegPakketToe() {
  */
 function toonPakkettenInAdmin() {
     const pakketten = JSON.parse(localStorage.getItem('tuinPakketten') || '[]');
-    const container = document.getElementById('pakketBeheerOverzicht'); // Moet nog toegevoegd worden aan admin.html!
+    const container = document.getElementById('pakketBeheerOverzicht');
 
     if (!container) return;
     
@@ -175,7 +240,6 @@ function toonPakkettenInAdmin() {
     });
 }
 
-// [De functies laadOrdersInAdmin en verwijderOrder blijven hetzelfde]
 function laadOrdersInAdmin() {
     const tabel = document.getElementById('orderTabel');
     const orders = JSON.parse(localStorage.getItem('tuinOrders') || '[]');
@@ -189,11 +253,16 @@ function laadOrdersInAdmin() {
 
     tabel.innerHTML = '';
     orders.forEach((order, index) => {
+        // Pas de weergave aan op basis van custom of standaard order
+        const pakketDetails = order.status.includes('Custom') 
+            ? `Custom Aanvraag: ${order.werkzaamheden}`
+            : order.pakketNaam;
+
         const row = `
             <tr>
                 <td>${order.datum} om ${order.tijd}</td>
                 <td><strong>${order.naam}</strong> (${order.postcodePlaats})</td>
-                <td>${order.pakketNaam}</td>
+                <td>${pakketDetails}</td>
                 <td><button onclick="verwijderOrder(${index})" style="background:red; color:white; border:none; padding:5px; cursor:pointer;">X</button></td>
             </tr>
         `;

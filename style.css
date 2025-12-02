@@ -96,6 +96,15 @@ h2 { text-align: center; color: var(--primary); margin-bottom: 2rem; }
     margin: 10px 0;
 }
 
+/* Custom Offerte Knop Stijl */
+.custom-offerte-wrapper {
+    text-align: center;
+    margin-top: 3rem;
+    padding: 2rem;
+    background: var(--accent);
+    border-radius: 8px;
+}
+
 /* Formulier */
 form {
     max-width: 600px;
@@ -124,3 +133,16 @@ input, select, textarea {
 }
 
 .btn-primary:hover { background: var(--secondary); }
+
+.btn-secondary {
+    background: var(--secondary);
+    color: white;
+    padding: 15px 30px;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.btn-secondary:hover { background: var(--primary); }
