@@ -12,6 +12,8 @@
         table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
         th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
         th { background-color: #2d6a4f; color: white; }
+        .pakket-item { border-bottom: 1px dashed #eee; padding-bottom: 10px; margin-bottom: 10px; }
+        .pakket-item:last-child { border-bottom: none; }
     </style>
 </head>
 <body>
@@ -29,15 +31,14 @@
         <div class="dashboard-grid">
             
             <div class="card" style="grid-column: span 2;">
-                <h3>Planning & Orders</h3>
+                <h3>Planning & Orders (<span id="orderCount">0</span> open)</h3>
                 <p>Overzicht van aanvragen en ingeplande klussen.</p>
                 <table>
                     <thead>
                         <tr>
-                            <th>Datum</th>
-                            <th>Klant</th>
-                            <th>Type</th>
-                            <th>Details</th>
+                            <th>Datum & Tijd</th>
+                            <th>Klant & Locatie</th>
+                            <th>Pakket / Werk</th>
                             <th>Actie</th>
                         </tr>
                     </thead>
@@ -57,18 +58,20 @@
             </div>
 
             <div class="card">
-                <h3>Status</h3>
-                <p>Aantal openstaande orders: <strong id="orderCount">0</strong></p>
-                <p>Systeem status: <strong>Online</strong></p>
+                <h3>Pakket Overzicht</h3>
+                <p>Dit zijn de pakketten die zichtbaar zijn voor klanten.</p>
+                <div id="pakketBeheerOverzicht">
+                    </div>
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="functions.js"></script>
     <script>
-        // Specifieke init voor admin pagina
+        // Specifieke init voor admin pagina (start de laadfuncties)
         document.addEventListener('DOMContentLoaded', () => {
             laadOrdersInAdmin();
+            toonPakkettenInAdmin();
         });
     </script>
 </body>
