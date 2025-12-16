@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Custom Offerte Aanvragen</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style/style.css">
 </head>
 <body>
 
@@ -21,27 +21,25 @@
         <p>Selecteer de gewenste werkzaamheden en geef de afmetingen van de tuin op.</p>
         
         <form id="customKlantFormulier">
-            
             <div class="card" style="margin-bottom: 20px; padding: 20px; background: white;">
                 <h3>Werkzaamheden</h3>
                 
-                <label class="checkbox-container">Betegelen
+                <label class="checkbox-container">Betegelen (€25,- p/m²)
                     <input type="checkbox" name="klus" value="Betegelen">
                     <span class="checkmark"></span>
                 </label>
                 
-                <label class="checkbox-container">Heg snoeien
+                <label class="checkbox-container">Heg snoeien (€50,- vast)
                     <input type="checkbox" name="klus" value="Heg snoeien">
                     <span class="checkmark"></span>
                 </label>
                 
-                <label class="checkbox-container">Onkruid verwijderen
+                <label class="checkbox-container">Onkruid verwijderen (€2,- p/m²)
                     <input type="checkbox" name="klus" value="Onkruid verwijderen">
                     <span class="checkmark"></span>
                 </label>
                 
                 <h3 style="margin-top: 30px;">Tuin Afmetingen (in meters)</h3>
-                
                 <label for="tuinLengte">Lengte tuin (in m):</label>
                 <input type="number" id="tuinLengte" required placeholder="Lengte">
                 
@@ -56,10 +54,10 @@
             <input type="text" id="klantNaam" required placeholder="Uw naam">
 
             <label for="klantAdres">Adres:</label>
-            <input type="text" id="klantAdres" required placeholder="Straatnaam en huisnummer">
+            <input type="text" id="klantAdres" required placeholder="Straatnaam">
 
             <label for="klantPostcodePlaats">Postcode en Plaats:</label>
-            <input type="text" id="klantPostcodePlaats" required placeholder="1234 AB Plaatsnaam">
+            <input type="text" id="klantPostcodePlaats" required placeholder="1234 AB Plaats">
 
             <label for="klantDatum">Datum voorkeur:</label>
             <input type="date" id="klantDatum" required>
@@ -67,27 +65,22 @@
             <label for="klantTijd">Tijd voorkeur:</label>
             <input type="time" id="klantTijd" required>
             
-            <button type="submit" class="btn-primary" style="margin-top: 20px;">Vraag Offerte Aan</button>
+            <button type="submit" class="btn-primary" style="margin-top: 20px; width: 100%;">Vraag Offerte Aan</button>
         </form>
+
+        <hr style="margin-top: 40px; border: 0; border-top: 1px solid #ccc;">
+        <div id="livePrijsBlok" style="margin-top: 20px; padding: 20px; background: #f9f9f9; border: 2px solid #2d6a4f; text-align: center; border-radius: 10px;">
+            <h3 style="margin: 0; color: #2d6a4f;">Live Prijsindicatie</h3>
+            <p style="margin: 5px 0; color: #666;">Op basis van uw huidige invoer:</p>
+            <div id="totaalBedrag" style="font-size: 2rem; font-weight: bold; color: #1b4332;">€ 0,00</div>
+        </div>
         
         <div id="orderOutput" style="margin-top: 30px; text-align: center; display: none;">
-            <h3>Uw aanvraag is ontvangen!</h3>
-            <pre id="orderDataDisplay" style="background: #f4f4f4; padding: 15px; border: 1px dashed #2d6a4f; text-align: left;"></pre>
+            <h3>Uw aanvraag is verzonden!</h3>
+            <pre id="orderDataDisplay" style="background: #eee; padding: 15px; text-align: left;"></pre>
         </div>
     </section>
 
-    <script src="functions.js"></script>
-    <script>
-        // Start de custom formulier logica
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('customKlantFormulier');
-            if (form) {
-                form.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    verwerkCustomBestelling();
-                });
-            }
-        });
-    </script>
+    <script src="../js/functions.js"></script>
 </body>
 </html>

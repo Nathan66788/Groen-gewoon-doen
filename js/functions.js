@@ -1,9 +1,7 @@
-// Initialisatie van de applicatie
+// --- INITIALISATIE ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Laad pakketten in zowel de dropdown als de grid
     loadPackages();
 
-    // Event listener voor het bestelformulier op index.html
     const form = document.getElementById('klantFormulier');
     if (form) {
         form.addEventListener('submit', (e) => {
@@ -12,60 +10,75 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Event listener voor het custom formulier op custom_offerte.html
     const customForm = document.getElementById('customKlantFormulier');
     if (customForm) {
+        // Zorgt ervoor dat de prijs direct verandert bij elke toetsaanslag of klik
+        customForm.addEventListener('input', berekenPrijs);
+        
         customForm.addEventListener('submit', (e) => {
             e.preventDefault();
             verwerkCustomBestelling();
         });
     }
 
-    // Admin Pagina Functies
     if (document.getElementById('adminPakketForm')) {
-        // Laad orders in de tabel
         laadOrdersInAdmin(); 
-        
-        // Event listener voor pakket toevoegen
         const adminForm = document.getElementById('adminPakketForm');
         adminForm.addEventListener('submit', (e) => {
             e.preventDefault();
             voegPakketToe();
         });
-        
-        // Laad pakketten in de admin weergave voor beheer
         toonPakkettenInAdmin();
     }
 });
 
-
-// --- FUNCTIES VOOR KLANTEN PAGINA (index.html) ---
-
-/**
- * Leest de packages data (eerst uit localStorage, anders uit JSON) en vult de UI.
- */
-async function loadPackages() {
-    let packages;
+// --- NIEUWE FUNCTIE: PRIJS BEREKENEN ---
+function berekenPrijs() {
+    const lengte = parseFloat(document.getElementById('tuinLengte').value) || 0;
+    const breedte = parseFloat(document.getElementById('tuinBreedte').value) || 0;
+    const oppervlakte = lengte * breedte;
     
-    // 1. Probeer eerst data uit localStorage te halen (bevat ook custom-toegevoegde pakketten)
+    let totaal = 0;
+    if (oppervlakte > 0) {
+        totaal += 25; // Voorrijkosten/Basis starttarief
+    }
+
+    const checkboxes = document.querySelectorAll('input[name="klus"]:checked');
+    checkboxes.forEach(cb => {
+        if (cb.value === "Betegelen") totaal += (oppervlakte * 25);
+        if (cb.value === "Heg snoeien") totaal += 50;
+        if (cb.value === "Onkruid verwijderen") totaal += (oppervlakte * 2);
+    });
+
+    const prijsDisplay = document.getElementById('totaalBedrag');
+    if (prijsDisplay) {
+        prijsDisplay.textContent = `€ ${totaal.toLocaleString('nl-NL', {minimumFractionDigits: 2})}`;
+    }
+    return totaal;
+}
+
+// --- BESTAANDE JS FUNCTIES (AANGEPAST VOOR CUSTOM PRIJS) ---
+
+async function loadPackages() {
+    let packages = [];
     const storedPackages = localStorage.getItem('tuinPakketten');
-    if (storedPackages) {
+    
+    if (storedPackages && storedPackages !== "[]") {
         packages = JSON.parse(storedPackages);
     } else {
-        // 2. Als er niets in localStorage staat, laad dan de JSON file
         try {
             const response = await fetch('packages.json');
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) throw new Error();
             packages = await response.json();
-            // Bewaar de startpakketten ook in localStorage
             localStorage.setItem('tuinPakketten', JSON.stringify(packages)); 
         } catch (error) {
-            console.error("Fout bij het laden van pakketten:", error);
-            packages = [];
+            console.error("Geen JSON gevonden.");
         }
     }
-    
-    // 3. Vul de dropdown (select)
+    renderUI(packages);
+}
+
+function renderUI(packages) {
     const selectElement = document.getElementById('klantPakket');
     if (selectElement) {
         selectElement.innerHTML = '<option value="" disabled selected>Kies een standaard pakket...</option>';
@@ -77,204 +90,103 @@ async function loadPackages() {
         });
     }
     
-    // 4. Vul de grid (overzicht)
     const container = document.getElementById('pakket-container');
     if (container) {
         container.innerHTML = '';
         packages.forEach(pakket => {
-            const html = `
+            container.innerHTML += `
                 <div class="pakket-kaart">
                     <h3>${pakket.naam}</h3>
                     <div class="prijs">${pakket.prijs}</div>
                     <p>${pakket.beschrijving}</p>
-                    <button onclick="document.getElementById('klantPakket').value = '${pakket.id}'; document.getElementById('bestelformulier').scrollIntoView({ behavior: 'smooth' });" class="btn-primary" style="font-size: 0.9rem;">Kies dit pakket</button>
-                </div>
-            `;
-            container.innerHTML += html;
+                    <button onclick="selecteerPakket('${pakket.id}')" class="btn-primary">Kies dit pakket</button>
+                </div>`;
         });
     }
 }
 
+function selecteerPakket(id) {
+    const select = document.getElementById('klantPakket');
+    if (select) {
+        select.value = id;
+        document.getElementById('bestelformulier')?.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
 function verwerkBestelling() {
-    // Haal de geselecteerde optie op voor de naam
-    const selectedPackageElement = document.getElementById('klantPakket');
-    const selectedPackageText = selectedPackageElement.options[selectedPackageElement.selectedIndex].textContent;
-
+    const sel = document.getElementById('klantPakket');
     const orderData = {
-        id: Date.now(), 
+        id: Date.now(),
         naam: document.getElementById('klantNaam').value,
-        adres: document.getElementById('klantAdres').value,
-        postcodePlaats: document.getElementById('klantPostcodePlaats').value,
+        pakket: sel.options[sel.selectedIndex].textContent,
         datum: document.getElementById('klantDatum').value,
-        tijd: document.getElementById('klantTijd').value,
-        pakketId: selectedPackageElement.value,
-        pakketNaam: selectedPackageText,
-        status: 'Nieuwe Aanvraag (Standaard)'
+        status: 'Standaard'
     };
-
-    createOrder(orderData);
+    saveOrder(orderData);
 }
 
-
-// --- NIEUWE FUNCTIE VOOR CUSTOM OFFERTE PAGINA (custom_offerte.html) ---
-
-/**
- * Verzamelt formulierdata van het custom formulier en roept createOrder aan.
- */
 function verwerkCustomBestelling() {
-    // Verzamel geselecteerde checkboxen
-    const checkboxes = document.querySelectorAll('#customKlantFormulier input[name="klus"]:checked');
-    const geselecteerdeKlussen = Array.from(checkboxes).map(cb => cb.value);
-
-    // Bepaal de lengte en breedte
-    const lengte = document.getElementById('tuinLengte').value;
-    const breedte = document.getElementById('tuinBreedte').value;
-    const oppervlakte = parseFloat(lengte) * parseFloat(breedte);
+    const klussen = Array.from(document.querySelectorAll('input[name="klus"]:checked')).map(cb => cb.value);
+    const prijs = berekenPrijs();
 
     const orderData = {
-        id: Date.now(), 
+        id: Date.now(),
         naam: document.getElementById('klantNaam').value,
         adres: document.getElementById('klantAdres').value,
-        postcodePlaats: document.getElementById('klantPostcodePlaats').value,
+        werkzaamheden: klussen.join(', '),
+        oppervlakte: `${(parseFloat(document.getElementById('tuinLengte').value || 0) * parseFloat(document.getElementById('tuinBreedte').value || 0))} m2`,
+        geschattePrijs: `€ ${prijs.toFixed(2)}`,
         datum: document.getElementById('klantDatum').value,
-        tijd: document.getElementById('klantTijd').value,
-        
-        // Specifieke custom data
-        pakketNaam: 'CUSTOM OFFERTE VRAAG',
-        werkzaamheden: geselecteerdeKlussen.join(', ') || 'Geen specifieke klussen geselecteerd',
-        afmetingen: `Lengte: ${lengte}m, Breedte: ${breedte}m, Totale Oppervlakte: ${oppervlakte.toFixed(2)} m²`,
-        status: 'Nieuwe Offerte Aanvraag'
+        status: 'Custom Offerte'
     };
-
-    createOrder(orderData, true); // Stuur 'true' mee om de output van het custom formulier te tonen
+    saveOrder(orderData);
 }
 
-
-// --- GEMEENSCHAPPELIJKE FUNCTIES ---
-
-/**
- * Verwerkt de orderdata: Logt, bewaart in Local Storage en geeft feedback.
- * @param {object} orderData - Het order object.
- * @param {boolean} isCustom - Geeft aan of de aanvraag van het custom formulier komt.
- */
-function createOrder(orderData, isCustom = false) {
-    console.log("--- Nieuwe Bestelling Ontvangen ---");
-    console.log(orderData);
-    
+function saveOrder(orderData) {
     const orders = JSON.parse(localStorage.getItem('tuinOrders') || '[]');
     orders.push(orderData);
     localStorage.setItem('tuinOrders', JSON.stringify(orders));
 
-    const outputDiv = document.getElementById('orderOutput');
-    const displayPre = document.getElementById('orderDataDisplay');
-
-    if (outputDiv && displayPre) {
-        // Toon de output op de index.html of custom_offerte.html
-        displayPre.textContent = JSON.stringify(orderData, null, 2);
-        outputDiv.style.display = 'block';
+    const output = document.getElementById('orderOutput');
+    if (output) {
+        document.getElementById('orderDataDisplay').textContent = JSON.stringify(orderData, null, 2);
+        output.style.display = 'block';
     }
-
-    alert(`Bestelling geplaatst! We komen op ${orderData.datum} om ${orderData.tijd} voor: ${orderData.pakketNaam}`);
-    
-    // Reset alleen als de formulier-ID bestaat op de huidige pagina
-    if (!isCustom && document.getElementById('klantFormulier')) {
-         document.getElementById('klantFormulier').reset();
-    } else if (isCustom && document.getElementById('customKlantFormulier')) {
-         document.getElementById('customKlantFormulier').reset();
-    }
-
-    // Herlaad de admin weergave als we op de admin pagina zijn
-    if (document.getElementById('orderTabel')) {
-        laadOrdersInAdmin();
-    }
-}
-
-
-// --- FUNCTIES VOOR ADMIN PAGINA (admin.html) ---
-
-/**
- * Voegt een nieuw pakket toe aan LocalStorage en werkt de weergave bij.
- */
-function voegPakketToe() {
-    const pakketTitel = document.getElementById('pakketTitel').value;
-    const pakketPrijs = document.getElementById('pakketPrijs').value;
-    const pakketBeschrijving = document.getElementById('pakketBeschrijving').value;
-
-    const nieuwPakket = {
-        id: 'PKT' + Date.now(), // Genereer een unieke ID
-        naam: pakketTitel,
-        prijs: pakketPrijs,
-        beschrijving: pakketBeschrijving
-    };
-
-    const pakketten = JSON.parse(localStorage.getItem('tuinPakketten') || '[]');
-    pakketten.push(nieuwPakket);
-    localStorage.setItem('tuinPakketten', JSON.stringify(pakketten));
-
-    alert(`Pakket '${pakketTitel}' succesvol toegevoegd!`);
-    document.getElementById('adminPakketForm').reset();
-    
-    // Update de weergave op de admin pagina en de klant pagina
-    toonPakkettenInAdmin();
-    loadPackages(); 
-}
-
-/**
- * Toont een overzicht van de pakketten op de admin pagina.
- */
-function toonPakkettenInAdmin() {
-    const pakketten = JSON.parse(localStorage.getItem('tuinPakketten') || '[]');
-    const container = document.getElementById('pakketBeheerOverzicht');
-
-    if (!container) return;
-    
-    container.innerHTML = '<h4>Huidige Pakketten:</h4>';
-    pakketten.forEach(pakket => {
-        const item = document.createElement('div');
-        item.style.marginBottom = '10px';
-        item.innerHTML = `
-            <strong>${pakket.naam}</strong> (${pakket.prijs})<br>
-            <small>${pakket.beschrijving}</small>
-        `;
-        container.appendChild(item);
-    });
+    alert("Verzonden naar de administratie!");
 }
 
 function laadOrdersInAdmin() {
     const tabel = document.getElementById('orderTabel');
     const orders = JSON.parse(localStorage.getItem('tuinOrders') || '[]');
-    const teller = document.getElementById('orderCount');
-    
-    if(teller) teller.innerText = orders.length;
-
-    orders.sort((a, b) => new Date(a.datum) - new Date(b.datum));
-
     if (!tabel) return;
-
     tabel.innerHTML = '';
-    orders.forEach((order, index) => {
-        // Pas de weergave aan op basis van custom of standaard order
-        const pakketDetails = order.status.includes('Custom') 
-            ? `Custom Aanvraag: ${order.werkzaamheden}`
-            : order.pakketNaam;
-
-        const row = `
-            <tr>
-                <td>${order.datum} om ${order.tijd}</td>
-                <td><strong>${order.naam}</strong> (${order.postcodePlaats})</td>
-                <td>${pakketDetails}</td>
-                <td><button onclick="verwijderOrder(${index})" style="background:red; color:white; border:none; padding:5px; cursor:pointer;">X</button></td>
-            </tr>
-        `;
-        tabel.innerHTML += row;
+    orders.forEach((o, i) => {
+        tabel.innerHTML += `<tr><td>${o.datum}</td><td>${o.naam}</td><td>${o.status}</td><td><button onclick="verwijderOrder(${i})">X</button></td></tr>`;
     });
 }
 
-function verwijderOrder(index) {
-    if(confirm('Weet je zeker dat je deze order wilt verwijderen?')) {
-        const orders = JSON.parse(localStorage.getItem('tuinOrders'));
-        orders.splice(index, 1);
-        localStorage.setItem('tuinOrders', JSON.stringify(orders));
-        laadOrdersInAdmin();
-    }
+function verwijderOrder(i) {
+    const orders = JSON.parse(localStorage.getItem('tuinOrders'));
+    orders.splice(i, 1);
+    localStorage.setItem('tuinOrders', JSON.stringify(orders));
+    laadOrdersInAdmin();
+}
+
+function voegPakketToe() {
+    const p = {
+        id: 'PKT' + Date.now(),
+        naam: document.getElementById('pakketTitel').value,
+        prijs: document.getElementById('pakketPrijs').value,
+        beschrijving: document.getElementById('pakketBeschrijving').value
+    };
+    const pkts = JSON.parse(localStorage.getItem('tuinPakketten') || '[]');
+    pkts.push(p);
+    localStorage.setItem('tuinPakketten', JSON.stringify(pkts));
+    location.reload();
+}
+
+function toonPakkettenInAdmin() {
+    const div = document.getElementById('pakketBeheerOverzicht');
+    const pkts = JSON.parse(localStorage.getItem('tuinPakketten') || '[]');
+    if (div) pkts.forEach(p => div.innerHTML += `<p>${p.naam}</p>`);
 }
